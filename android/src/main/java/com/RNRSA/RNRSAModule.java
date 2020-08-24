@@ -3,13 +3,7 @@ package com.RNRSA;
 
 import android.os.AsyncTask;
 
-import com.facebook.react.bridge.NoSuchKeyException;
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.WritableNativeMap;
-import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.*;
 import org.spongycastle.asn1.ASN1ObjectIdentifier;
 import org.spongycastle.asn1.x500.X500Name;
 import org.spongycastle.asn1.x500.X500NameBuilder;
@@ -299,20 +293,20 @@ public class RNRSAModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void createCSR(final String privateKeyString, final String publicKeyString, final Promise promise) {
+  public void createCSR(final String privateKeyString, final String publicKeyString, ReadableMap readableMap, final Promise promise) {
     AsyncTask.execute(new Runnable() {
       @Override
       public void run() {
         try {
           ASN1ObjectIdentifier G = new ASN1ObjectIdentifier("1.9.4");
           X500NameBuilder namebuilder = new X500NameBuilder(X500Name.getDefaultStyle());
-          namebuilder.addRDN(BCStrictStyle.SERIALNUMBER,"0020422679");
-          namebuilder.addRDN(BCStyle.CN,"Hamid Osouli [Sign]");
-          namebuilder.addRDN(BCStyle.SURNAME, "اصولی ساران");
-          namebuilder.addRDN(BCStyle.O, "Unaffiliated");
-          namebuilder.addRDN(BCStyle.C, "IR");
-          namebuilder.addRDN(BCStyle.L, "تهران");
-          namebuilder.addRDN(BCStyle.GIVENNAME, "حمیدرضا");
+          namebuilder.addRDN(BCStrictStyle.SERIALNUMBER,readableMap.getString("serialNumber"));
+          namebuilder.addRDN(BCStyle.CN,readableMap.getString("commonName"));
+          namebuilder.addRDN(BCStyle.SURNAME, readableMap.getString("surName"));
+          namebuilder.addRDN(BCStyle.O, readableMap.getString("organization"));
+          namebuilder.addRDN(BCStyle.C, readableMap.getString("country"));
+          namebuilder.addRDN(BCStyle.L, readableMap.getString("locality"));
+          namebuilder.addRDN(BCStyle.GIVENNAME, readableMap.getString("givenName"));
           RSA rsa = new RSA();
           rsa.setPublicKey(publicKeyString);
           rsa.setPrivateKey(privateKeyString);
