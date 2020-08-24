@@ -10,9 +10,21 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.bridge.Promise;
+import org.spongycastle.asn1.ASN1ObjectIdentifier;
+import org.spongycastle.asn1.x500.X500Name;
+import org.spongycastle.asn1.x500.X500NameBuilder;
+import org.spongycastle.asn1.x500.style.BCStrictStyle;
+import org.spongycastle.asn1.x500.style.BCStyle;
+import org.spongycastle.operator.ContentSigner;
+import org.spongycastle.operator.OperatorCreationException;
+import org.spongycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.spongycastle.pkcs.PKCS10CertificationRequest;
+import org.spongycastle.pkcs.PKCS10CertificationRequestBuilder;
+import org.spongycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -279,6 +291,38 @@ public class RNRSAModule extends ReactContextBaseJavaModule {
           boolean verified = rsa.verify64(signature, message, algorithm);
           promise.resolve(verified);
 
+        } catch (Exception e) {
+          promise.reject("Error", e.getMessage());
+        }
+      }
+    });
+  }
+
+  @ReactMethod
+  public void createCSR(final String privateKeyString, final String publicKeyString, final Promise promise) {
+    AsyncTask.execute(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          ASN1ObjectIdentifier G = new ASN1ObjectIdentifier("1.9.4");
+          X500NameBuilder namebuilder = new X500NameBuilder(X500Name.getDefaultStyle());
+          namebuilder.addRDN(BCStrictStyle.SERIALNUMBER,"0020422679");
+          namebuilder.addRDN(BCStyle.CN,"Hamid Osouli [Sign]");
+          namebuilder.addRDN(BCStyle.SURNAME, "اصولی ساران");
+          namebuilder.addRDN(BCStyle.O, "Unaffiliated");
+          namebuilder.addRDN(BCStyle.C, "IR");
+          namebuilder.addRDN(BCStyle.L, "تهران");
+          namebuilder.addRDN(BCStyle.GIVENNAME, "حمیدرضا");
+          RSA rsa = new RSA();
+          rsa.setPublicKey(publicKeyString);
+          rsa.setPrivateKey(privateKeyString);
+          PrivateKey privateKey = rsa.getPurePrivateKey();
+          PublicKey publicKey = rsa.getPurePublicKey();
+          PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(namebuilder.build(),publicKey);
+          JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder("SHA1WITHRSA");
+          ContentSigner signer = csBuilder.build(privateKey);
+          PKCS10CertificationRequest request = p10Builder.build(signer);
+          promise.resolve(request.getEncoded());
         } catch (Exception e) {
           promise.reject("Error", e.getMessage());
         }

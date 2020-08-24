@@ -116,6 +116,13 @@ public class RSA {
         return dataToPem(PRIVATE_HEADER, pkcs1PrivateKey);
     }
 
+    public PrivateKey getPurePrivateKey(){
+        return this.privateKey;
+    }
+    public PublicKey getPurePublicKey(){
+        return this.publicKey;
+    }
+
     public void setPublicKey(String publicKey) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         this.publicKey = pkcs1ToPublicKey(publicKey);
     }
